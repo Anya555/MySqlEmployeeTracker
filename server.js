@@ -66,3 +66,45 @@ function makeChoice() {
         }
     });
 }
+
+ function addEmployee() {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "fname",
+            message: "Employee's first name: "
+        },
+        {
+            type: "input",
+            name: "lname",
+            message: "Employee's last name: "
+        },
+        {
+            type: "input",
+            name: "roleId",
+            message: "Employee's role id: "
+        },
+        {
+            type: "input",
+            name: "managerId",
+            message: "Enter manager's id if applicable or respond '0':",
+        },
+    ]).then(function(answers){
+        var query = connection.query(
+
+            "INSERT INTO employee SET ?",
+            {
+                first_name: answers.fname,
+                last_name: answers.lname,
+                role_id: answers.roleId,
+                manager_id: answers.managerId
+            },
+            function (err, res) {
+                if (err) throw err;
+                console.log(res.affectedRows + " employee inserted!\n");
+                // makeChoice();
+            }
+        );
+        console.log(query.sql);
+    });
+}
