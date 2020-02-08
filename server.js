@@ -102,9 +102,17 @@ function makeChoice() {
             function (err, res) {
                 if (err) throw err;
                 console.log(res.affectedRows + " employee inserted!\n");
-                // makeChoice();
+                makeChoice();
             }
         );
         console.log(query.sql);
+    });
+}
+
+function  viewEmployees() {
+    connection.query("SELECT * FROM employee", function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        makeChoice();
     });
 }
