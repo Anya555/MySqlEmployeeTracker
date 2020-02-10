@@ -72,7 +72,7 @@ const makeChoice = () => {
 
 const addEmployee = () => {
 
-    connection.query("SELECT title FROM role", function (err, res) {
+    connection.query("SELECT id, title FROM role", function (err, allRoles) {
         if (err) throw err;
 
         inquirer.prompt([
@@ -87,36 +87,28 @@ const addEmployee = () => {
                 message: "Employee's last name: "
             },
             {
-                type: "list",
+                type: "rawlist",
                 name: "role",
                 message: "Select employee's role from the list: ",
                 // looping through title array, so I can pull out updated data from database
                 choices: function () {
-                    const title = [];
-                    res.forEach(idx => {
-                        title.push(idx.title)
-                    }
-                    )
-                    return title;
+                    const choices = [];
+                    allRoles.forEach(role => {
+                        let choice = role.id + " - " + role.title;
+                        choices.push(choice);
+                    })
+                    return choices;
                 }
             }
         ]).then(answers => {
- 
-           const getTtitle = () => {
-            answers.forEach(newTtitle => {
-               newTtitle.title = role_id;
-            });
-            return answers.newTtitle;
-        }
-
+            const thisRoleId = parseInt(answers.role.split(" - ")[0]); 
             const query = connection.query(
                 // this takes user input from inquirer and adds new employee to database
                 "INSERT INTO employee SET ?",
-
                 {
                     first_name: answers.fname,
                     last_name: answers.lname,
-                    role_id: answers.newTtitle
+                    role_id: thisRoleId
                 },
                 function (err, res) {
                     if (err) throw err;
