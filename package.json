@@ -19,6 +19,7 @@
   "dependencies": {
     "console.table": "^0.10.0",
     "inquirer": "^7.0.4",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "prompt-rawlist": "^2.0.1"
   }
 }
