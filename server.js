@@ -1,6 +1,7 @@
 // adding dependencies
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+// The console.table() allows to display arrays and objects in the console in a nice tabular format
 const cTable = require('console.table');
 
 
@@ -20,7 +21,7 @@ connection.connect(function (err) {
 });
 
 // When application starts,  user is prompted to make initial  choice
-function makeChoice() {
+const makeChoice = () => {
     inquirer.prompt([
         {
             type: "list",
@@ -29,7 +30,7 @@ function makeChoice() {
             choices: [
                 "View all employees",
                 "View all departments",
-                "View all roles",
+                "View job titles",
                 "Add an employee",
                 "Add a department",
                 "Add a role",
@@ -37,7 +38,7 @@ function makeChoice() {
                 "Exit"
             ]
         }
-    ]).then(function (answers) {
+    ]).then(answers => {
         // adding switch statement to handle which function gets executed based on user's choice
         switch (answers.choice) {
             case "View all employees":
@@ -46,7 +47,7 @@ function makeChoice() {
             case "View all departments":
                 viewDepartments();
                 break;
-            case "View all roles":
+            case "View job titles":
                 viewRoles();
                 break;
             case "Add an employee":
@@ -69,7 +70,7 @@ function makeChoice() {
     });
 }
 
-function addEmployee() {
+const addEmployee = () => {
     inquirer.prompt([
         {
             type: "input",
@@ -81,7 +82,7 @@ function addEmployee() {
             name: "lname",
             message: "Employee's last name: "
         }
-    ]).then(function (answers) {
+    ]).then(answers => {
         const query = connection.query(
 
             // this takes user input from inquirer and adds new employee to database
@@ -102,13 +103,11 @@ function addEmployee() {
 }
 
 
-function viewEmployees() {
+const viewEmployees = () => {
 
     // LEFT JOIN returns all of the values from the left table, and the matching ones from the right table
-    connection.query("SELECT first_name, last_name, title, salary FROM employee LEFT JOIN role ON role.id = employee.role_id", function (err, res) {
+    connection.query("SELECT first_name, last_name, title, salary, department, manager FROM employee LEFT JOIN role ON role.id = employee.role_id LEFT JOIN department ON department.id = role.department_id ", function (err, res) {
         if (err) throw err;
-
-        // The console.table() allows to display arrays and objects in the console in a nice tabular format.
         console.table(res);
         // prompting user to make another choice
         makeChoice();
@@ -116,7 +115,7 @@ function viewEmployees() {
 }
 
 // function displays all departments and it's managers
-function viewDepartments() {
+const viewDepartments = () => {
     connection.query("SELECT * FROM department", function (err, res) {
         if (err) throw (err);
         console.table(res);
@@ -125,7 +124,7 @@ function viewDepartments() {
     });
 }
 
-function addDepartment() {
+const addDepartment = () => {
     inquirer.prompt([
         {
             type: "input",
@@ -137,10 +136,10 @@ function addDepartment() {
             name: "manager",
             message: "Enter first and last name of department manager: "
         }
-    ]).then(function (answers) {
+    ]).then(answers => {
 
         const query = connection.query(
-        // this takes user input from inquirer and adds new department and department manager to database
+            // this takes user input from inquirer and adds new department and department manager to database
             "INSERT INTO department SET ?",
             {
                 department: answers.department,
@@ -148,6 +147,46 @@ function addDepartment() {
             }, function (err, res) {
                 if (err) throw err;
                 console.log(res.affectedRows + " department inserted!\n");
+
+                // prompting user to make another choice
+                makeChoice();
+            }
+        );
+    });
+}
+
+// this function display all job titles and corresponding saleries
+const viewRoles = () => {
+    connection.query("SELECT title, salary, department FROM role LEFT JOIN department ON department.id = role.department_id", function (err, res) {
+        if (err) throw (err);
+        console.table(res);
+        // prompting user to make another choice 
+        makeChoice();
+    });
+}
+
+const addRole = () => {
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "role",
+            message: "Enter a name of a job title you'd like to add:"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "Enter a corresponding salary to a job title you're adding: "
+        }
+    ]).then(answers => {
+        const query = connection.query(
+            // this takes user input from inquirer and adds new job title to database
+            "INSERT INTO role SET ?",
+            {
+                title: answers.role,
+                salary: answers.salary
+            }, function(err, res){
+                if(err) throw err;
+                console.log(res.affectedRows + " job title inserted!\n");
 
                 // prompting user to make another choice
                 makeChoice();
