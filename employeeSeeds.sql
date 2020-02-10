@@ -1,4 +1,4 @@
-DROP DATABASE IF EXISTS tracker_db;DROP DATABASE IF EXISTS tracker_db;
+DROP DATABASE IF EXISTS tracker_db;
 -- creating database--
 CREATE DATABASE tracker_db;
 -- Makes it so all of the following code will affect tracker_db --
@@ -66,5 +66,5 @@ VALUES ("Jimmy", "Python", 4, 4);
 INSERT INTO department (department, manager)
 VALUES ("Sales", "Keith Black");
 INSERT INTO department (department, manager)
-VALUES ("Engineering", "Emma Jackson");
+VALUES ("Engineering", "Kris Monroe");
 

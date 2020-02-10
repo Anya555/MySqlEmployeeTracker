@@ -71,40 +71,69 @@ const makeChoice = () => {
 }
 
 const addEmployee = () => {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "fname",
-            message: "Employee's first name: "
-        },
-        {
-            type: "input",
-            name: "lname",
-            message: "Employee's last name: "
-        }
-    ]).then(answers => {
-        const query = connection.query(
 
-            // this takes user input from inquirer and adds new employee to database
-            "INSERT INTO employee SET ?",
+    connection.query("SELECT title FROM role", function (err, res) {
+        if (err) throw err;
+
+        inquirer.prompt([
             {
-                first_name: answers.fname,
-                last_name: answers.lname
+                type: "input",
+                name: "fname",
+                message: "Employee's first name: "
             },
-            function (err, res) {
-                if (err) throw err;
-                console.log(res.affectedRows + " employee inserted!\n");
-
-                // prompting user to make another choice
-                makeChoice();
+            {
+                type: "input",
+                name: "lname",
+                message: "Employee's last name: "
+            },
+            {
+                type: "list",
+                name: "role",
+                message: "Select employee's role from the list: ",
+                // looping through title array, so I can pull out updated data from database
+                choices: function () {
+                    const title = [];
+                    res.forEach(idx => {
+                        title.push(idx.title)
+                    }
+                    )
+                    return title;
+                }
             }
-        );
+        ]).then(answers => {
+ 
+           const getTtitle = () => {
+            answers.forEach(newTtitle => {
+               newTtitle.title = role_id;
+            });
+            return answers.newTtitle;
+        }
+
+            const query = connection.query(
+                // this takes user input from inquirer and adds new employee to database
+                "INSERT INTO employee SET ?",
+
+                {
+                    first_name: answers.fname,
+                    last_name: answers.lname,
+                    role_id: answers.newTtitle
+                },
+                function (err, res) {
+                    if (err) throw err;
+                    console.log(res.affectedRows + " employee inserted!\n");
+
+                    // prompting user to make another choice
+                    makeChoice();
+                }
+            );
+        });
     });
 }
 
 
+// this function joins all tables and displays the following data: Employee's first and last name, job tile, salary, department and manager(if applies)
 const viewEmployees = () => {
-
+    // Joining all 3 tables together
     // LEFT JOIN returns all of the values from the left table, and the matching ones from the right table
     connection.query("SELECT first_name, last_name, title, salary, department, manager FROM employee LEFT JOIN role ON role.id = employee.role_id LEFT JOIN department ON department.id = role.department_id ", function (err, res) {
         if (err) throw err;
@@ -184,8 +213,8 @@ const addRole = () => {
             {
                 title: answers.role,
                 salary: answers.salary
-            }, function(err, res){
-                if(err) throw err;
+            }, function (err, res) {
+                if (err) throw err;
                 console.log(res.affectedRows + " job title inserted!\n");
 
                 // prompting user to make another choice
