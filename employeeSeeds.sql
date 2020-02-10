@@ -33,7 +33,7 @@ CREATE TABLE department (
 CREATE TABLE role (
     id INTEGER (11) AUTO_INCREMENT NOT NULL,
     title VARCHAR (50) NOT NULL,
-    salary DECIMAL(6,3) NOT NULL,
+    salary DECIMAL(6) NOT NULL,
 
     -- foreign key --
     department_id INTEGER REFERENCES department(id),
@@ -43,19 +43,21 @@ CREATE TABLE role (
 
 
 INSERT INTO role (title, salary, department_id)
-VALUES ("Sales person", 80, 1);
+VALUES ("Sales person", 80000, 1);
 INSERT INTO role (title, salary, department_id)
-VALUES ("Sales lead", 90, 1);
+VALUES ("Sales lead", 90000, 1);
 INSERT INTO role (title, salary, department_id)
-VALUES ("Lead Engineer", 95, 2);
+VALUES ("Lead Engineer", 95000, 2);
 INSERT INTO role (title, salary, department_id)
-VALUES ("Software engineer", 75, 2); 
--- INSERT INTO role (title, salary, department_id)
--- VALUES ("Lawyer", 100, 3);
--- INSERT INTO role (title, salary, department_id)
--- VALUES ("Paralegal", 70, 3);
+VALUES ("Software engineer", 75000, 2); 
+
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Joanne", "Reed", 1, 5);
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES ("Enthony", "Grey", 2, 2);
+
+INSERT INTO department (department, manager)
+VALUES ("Sales", "Keith Black");
+INSERT INTO department (department, manager)
+VALUES ("Engineering", "Emma Jackson");
