@@ -1,9 +1,10 @@
 // adding dependencies
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-// The console.table() allows to display arrays and objects in the console in a nice tabular format
+// console.table() allows to display arrays and objects in the console in a nice tabular format
 const cTable = require('console.table');
 
+// =================================================================================================//
 
 // setting up connection between mysql server and mySql workbench
 const connection = mysql.createConnection({
@@ -19,6 +20,8 @@ connection.connect(function (err) {
     console.log("connected as id" + connection.threadID);
     makeChoice();
 });
+
+// =================================================================================================//
 
 // When application starts,  user is prompted to make initial  choice
 const makeChoice = () => {
@@ -63,15 +66,66 @@ const makeChoice = () => {
                 updateEmployeeRole();
                 break;
             default:
-                console.log("All changes have been saved");
+                console.log("Your changes have been saved");
                 // if user chooses to exit, this ends all connection
                 connection.end();
         }
     });
 }
 
+
+const getDepartment = (role, fname, lname) => {
+    connection.query("SELECT id, department FROM department", function (err, allDepts) {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                type: "rawlist",
+                name: "department",
+                message: "Select employee's department from the list: ",
+                choices: function () {
+                    const choices = [];
+                    allDepts.forEach(dept => {
+                        let choice = dept.id + " - " + dept.department;
+                        choices.push(choice);
+                    })
+                    return choices;
+                }
+            },
+        ]).then(function(answers){
+            const thisRoleId = parseInt(role.split(" - ")[0]);
+            const thisDeptId = parseInt(answers.department.split(" - ")[0]);
+            const query = connection.query(
+                // this takes user input from inquirer and adds new employee to database
+                "INSERT INTO employee SET ?",
+                {
+                    first_name: fname,
+                    last_name: lname,
+                    role_id: thisRoleId,
+                    department_id: thisDeptId
+                },
+                function (err, res) {
+                    if (err) throw err;
+                    console.log(res.affectedRows + " employee inserted!\n");
+
+                    // prompting user to make another choice
+                    makeChoice();
+                }
+            );
+        });
+    });
+}
+
+// ================================================================================================== //
+
+// this function lets user add new employee to database
 const addEmployee = () => {
 
+    // setting up connection with role and department tables so I can insert matched values into emoloyee table
+
+    // connection.query("SELECT role.id, role.title, department.id, department.department, department.manager FROM role, department", function(err, res){
+
+    // connection.query("SELECT role.id, role.title, department.id, department.department, department.manager FROM role LEFT JOIN employee ON employee.role_id = role.id LEFT JOIN department ON  department.id  = employee.manager_id", function (err, res) {
     connection.query("SELECT id, title FROM role", function (err, allRoles) {
         if (err) throw err;
 
@@ -90,7 +144,7 @@ const addEmployee = () => {
                 type: "rawlist",
                 name: "role",
                 message: "Select employee's role from the list: ",
-                // looping through title array, so I can pull out updated data from database
+                // looping through title array, so I can pull out up to date roles list from database
                 choices: function () {
                     const choices = [];
                     allRoles.forEach(role => {
@@ -101,29 +155,15 @@ const addEmployee = () => {
                 }
             }
         ]).then(answers => {
-            const thisRoleId = parseInt(answers.role.split(" - ")[0]); 
-            const query = connection.query(
-                // this takes user input from inquirer and adds new employee to database
-                "INSERT INTO employee SET ?",
-                {
-                    first_name: answers.fname,
-                    last_name: answers.lname,
-                    role_id: thisRoleId
-                },
-                function (err, res) {
-                    if (err) throw err;
-                    console.log(res.affectedRows + " employee inserted!\n");
-
-                    // prompting user to make another choice
-                    makeChoice();
-                }
-            );
+            getDepartment(answers.role, answers.fname, answers.lname);
         });
     });
 }
 
+// ================================================================================================= //
 
-// this function joins all tables and displays the following data: Employee's first and last name, job tile, salary, department and manager(if applies)
+// this function joins all tables and displays the following data:
+// employee's first and last name, job tile, salary, department and manager(if applies)
 const viewEmployees = () => {
     // Joining all 3 tables together
     // LEFT JOIN returns all of the values from the left table, and the matching ones from the right table
@@ -135,6 +175,8 @@ const viewEmployees = () => {
     });
 }
 
+// ============================================================================================== //
+
 // function displays all departments and it's managers
 const viewDepartments = () => {
     connection.query("SELECT * FROM department", function (err, res) {
@@ -145,7 +187,11 @@ const viewDepartments = () => {
     });
 }
 
+// =============================================================================================== //
+
+// this function let's user add a new department and department manager
 const addDepartment = () => {
+
     inquirer.prompt([
         {
             type: "input",
@@ -176,6 +222,8 @@ const addDepartment = () => {
     });
 }
 
+// =============================================================================================== //
+
 // this function display all job titles and corresponding saleries
 const viewRoles = () => {
     connection.query("SELECT title, salary, department FROM role LEFT JOIN department ON department.id = role.department_id", function (err, res) {
@@ -186,32 +234,118 @@ const viewRoles = () => {
     });
 }
 
-const addRole = () => {
-    inquirer.prompt([
-        {
-            type: "input",
-            name: "role",
-            message: "Enter a name of a job title you'd like to add:"
-        },
-        {
-            type: "input",
-            name: "salary",
-            message: "Enter a corresponding salary to a job title you're adding: "
-        }
-    ]).then(answers => {
-        const query = connection.query(
-            // this takes user input from inquirer and adds new job title to database
-            "INSERT INTO role SET ?",
-            {
-                title: answers.role,
-                salary: answers.salary
-            }, function (err, res) {
-                if (err) throw err;
-                console.log(res.affectedRows + " job title inserted!\n");
+// ================================================================================================ //
 
-                // prompting user to make another choice
-                makeChoice();
+// this function lets user add new role, corresponding salary and department
+const addRole = () => {
+
+    connection.query("Select id, department FROM department", function (err, depId) {
+        if (err) throw err;
+
+
+        inquirer.prompt([
+            {
+                type: "input",
+                name: "role",
+                message: "Enter a name of a job title you'd like to add: "
+            },
+            {
+                type: "input",
+                name: "salary",
+                message: "Enter a corresponding salary to a job title you're adding: "
+            },
+            {
+                type: "rawlist",
+                name: "department",
+                message: "Select a corresponding department to a job title you're adding: ",
+                choices: function () {
+                    const choices = [];
+                    depId.forEach(dep => {
+
+                        let choice = dep.id + " - " + dep.department;
+                        choices.push(choice);
+                    })
+                    return choices;
+                }
             }
-        );
+        ]).then(answers => {
+
+            const thisDepId = parseInt(answers.department.split(" - ")[0]);
+            const query = connection.query(
+                // this takes user input from inquirer and adds new job title to database
+                "INSERT INTO role SET ?",
+                {
+                    title: answers.role,
+                    salary: answers.salary,
+                    department_id: thisDepId
+                }, function (err, res) {
+                    if (err) throw err;
+                    console.log(res.affectedRows + " job title inserted!\n");
+
+                    // prompting user to make another choice
+                    makeChoice();
+                }
+            );
+        });
+    });
+}
+
+// ============================================================================================== //
+
+// this function lets user pick a certain employee from a list and update employee's role
+const updateEmployeeRole = () => {
+    connection.query("Select * FROM employee, role ", function (err, res) {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                type: "rawlist",
+                name: "employee",
+                message: "Select an employee who's role you like to update: ",
+                choices: function () {
+                    const choices = [];
+                    res.forEach(role => {
+
+                        let choice = role.first_name + " " + role.last_name;
+                        choices.push(choice);
+                    });
+                    return choices;
+                }
+            },
+            {
+                type: "rawlist",
+                name: "role",
+                message: "Select new role for employee: ",
+                choices: function () {
+                    const choices = [];
+                    res.forEach(role => {
+
+                        let choice = role.id + " - " + role.title;
+                        choices.push(choice);
+                    });
+                    return choices;
+                }
+            }
+        ]).then(answers => {
+          
+            const thisRoleId = parseInt(answers.role.split(" - ")[0]);
+            // console.log(thisRoleId);
+            connection.query(
+                "UPDATE employee SET ? WHERE  ?",
+                [
+                    {
+                       role_id: answers.role
+                    },
+                    {
+                        id: thisRoleId.id
+                    } 
+                ],
+                function(error) {
+                    if (error) throw err;
+                    console.log("Employee's role has been updated!");
+                    makeChoice();
+                  }
+            )
+        });
     });
 }

@@ -16,7 +16,7 @@ CREATE TABLE employee (
      -- Foreign Key --
      role_id  INTEGER REFERENCES role(id),
      -- Foreign Key --
-     manager_id INTEGER REFERENCES department(department_id),
+     manager_id INTEGER REFERENCES department(id),
     
     PRIMARY KEY (id)
 );
@@ -42,7 +42,7 @@ CREATE TABLE role (
 );
 
 -- -- seeding a schema (adding data to tables) --
-
+-- dummie data for testing purposes --
 INSERT INTO role (title, salary, department_id)
 VALUES ("Sales person", 80000, 1);
 INSERT INTO role (title, salary, department_id)
