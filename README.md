@@ -17,4 +17,4 @@ Application lets user do the following:
 
 My biggest challenge was to learn how to properly join multiple tables. Joins allow you to link data from two or more tables together a single query result--from one single SELECT statement.
 
-![EmployeeTracker](assets/images/EmployeeTracker.gif)
+![EmployeeTracker](./assets/images/EmployeeTracker.gif)
