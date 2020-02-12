@@ -75,8 +75,8 @@ const makeChoice = () => {
 
 // ==========================================================================================================//
 
-// to add a new employee, I need to select data from different tables within the same query , which is causing asynchronicity issues  when using inquirer. So I wrote a separate function to get data from deprartment table 
-// and I'm calling getDepartment() function inside addEmployee() function
+// to add a new employee, I need to select data from different tables within the same query , which is causing asynchronicity issues  when using inquirer. 
+//So I wrote a separate function to get data from deprartment table and I'm calling getDepartment() function inside addEmployee() function
 
 const getDepartment = (role, fname, lname) => {
     connection.query("SELECT id, department FROM department", function (err, allDepts) {
@@ -120,14 +120,11 @@ const getDepartment = (role, fname, lname) => {
     });
 }
 
-// ================================================================================================== //
 
 // this function lets user add new employee to database
 const addEmployee = () => {
 
-    // setting up connection with role and department tables so I can insert matched values into emoloyee table
-
-    connection.query("SELECT id, title FROM role", function (err, allRoles) {
+    conection.query("SELECT id, title FROM role", function (err, allRoles) {
         if (err) throw err;
 
         inquirer.prompt([
@@ -293,10 +290,37 @@ const addRole = () => {
 
 // ============================================================================================== //
 
-// getting a list of job titles from role table and updating a new employee's role
+// step1 - getting list of employees from employee table
+const updateEmployeeRole = () => {
+    connection.query("Select id, first_name, last_name FROM employee", function (err, res) {
+        if (err) throw err;
 
-const getRole = (employee) => {
-    connection.query("SELECT id, title  FROM role", function (err, res) {
+        inquirer.prompt([
+            {
+                type: "rawlist",
+                name: "employee",
+                message: "Select an employee who's role you like to update: ",
+                choices: function () {
+                    const choices = [];
+                    res.forEach(employee => {
+                        let choice = employee.id + " - " + employee.first_name + " " + employee.last_name;
+                        choices.push(choice);
+                    });
+                    return choices;
+                }
+            }
+            ]).then(answers => {
+                const thisEmployeeId = parseInt(answers.employee.split(" - ")[0]);
+                console.log("Updating employee id: " + thisEmployeeId);
+                getRole(thisEmployeeId);
+            });
+    });
+}
+
+//step2 - getting a list of job titles from role table 
+
+const getRole = (thisEmployeeId) => {
+    connection.query("SELECT id, title  FROM role",  function (err, res) {
         if (err) throw err;
       
         inquirer.prompt([
@@ -318,41 +342,22 @@ const getRole = (employee) => {
         ]).then(answers => {
             
             const thisRoleId = parseInt(answers.role.split(" - ")[0]);
-            updateEmployee(answers.role);
-            //
-            // // console.log(thisRoleId);
-            // connection.query(
-            //     "UPDATE employee SET ? WHERE  ?",
-            //     [
-            //         {
-            //             role_id: answers.role
-            //         },
-            //         {
-            //             id: thisRoleId.id
-            //         }
-            //     ],
-            //     function (error) {
-            //         if (error) throw err;
-            //         console.log("Employee's role has been updated!");
-            //         makeChoice();
-            //     }
-            // )
+            updateEmployee(thisRoleId, thisEmployeeId);
         })
     })
 }
 
-const updateEmployee = (role, thisRoleId) => {
-//    connection.query("Select role_id FROM employee LEFT JOIN role ON role.id = employee.role_id", function(err, res){
-//        if (err) throw err;
-   
+//step3 - now that I'm able to get data from role and department tables, I can update employee role in employee table
+
+const updateEmployee = (thisRoleId, thisEmployeeId) => {
     connection.query(
-        "UPDATE employee SET ? WHERE  ?",
+        "UPDATE employee SET ? WHERE ?",
         [
             {
-                role_id: role
+                role_id: thisRoleId
             },
             {
-                id: thisRoleId
+                id: thisEmployeeId
             }
         ],
         function (error) {
@@ -361,34 +366,6 @@ const updateEmployee = (role, thisRoleId) => {
             makeChoice();
         }
     );
-// });
 }
 
-
-
-// this function lets user pick a certain employee from a list and update employee's role
-// since I have to select data from multiples tables, following logic form lines (78-79)
-const updateEmployeeRole = () => {
-    connection.query("Select id, first_name, last_name FROM employee", function (err, res) {
-        if (err) throw err;
-
-        inquirer.prompt([
-            {
-                type: "rawlist",
-                name: "employee",
-                message: "Select an employee who's role you like to update: ",
-                choices: function () {
-                    const choices = [];
-                    res.forEach(employee => {
-
-                        let choice = employee.first_name + " " + employee.last_name;
-                        choices.push(choice);
-                    });
-                    return choices;
-                }
-            }
-            ]).then(answers => {
-                getRole(answers.employee);
-            });
-    });
-}
+// =========================================================================================================//
