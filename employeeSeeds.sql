@@ -26,6 +26,7 @@ CREATE TABLE department (
      id INTEGER(11) AUTO_INCREMENT NOT NULL,
      department VARCHAR (50) NOT NULL,
      manager VARCHAR (50) NOT NULL,
+  
      PRIMARY KEY (id)
 );
 
