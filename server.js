@@ -124,7 +124,7 @@ const getDepartment = (role, fname, lname) => {
 // this function lets user add new employee to database
 const addEmployee = () => {
 
-    conection.query("SELECT id, title FROM role", function (err, allRoles) {
+    connection.query("SELECT id, title FROM role", function (err, allRoles) {
         if (err) throw err;
 
         inquirer.prompt([
